@@ -16,7 +16,8 @@ from .utils import run_npm_install
 def have_node():
     """Check that we can run node and have a new enough version """
     try:
-        cp = subprocess.run(['node', '-v'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+        cp = subprocess.run(['node', '-v'], stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, check=False)
     except FileNotFoundError:
         return False
 
@@ -37,7 +38,7 @@ def have_node():
     return os.path.exists(node_modules)
 
 
-def simple_json_from_html_string(html, content_digests=False, node_indexes=False, use_readability=False):
+def simple_json_from_html_string(html, content_digests=False, node_indexes=False, use_readability=True):
     if use_readability and not have_node():
         print("Warning: node executable not found, reverting to pure-Python mode. Install Node.js v10 or newer to use Readability.js.", file=sys.stderr)
         use_readability = False
@@ -90,11 +91,13 @@ def simple_json_from_html_string(html, content_digests=False, node_indexes=False
             article_json["date"] = input_json["date"]
         if "content" in input_json and input_json["content"]:
             article_json["content"] = input_json["content"]
-            article_json["plain_content"] = plain_content(article_json["content"], content_digests, node_indexes)
+            article_json["plain_content"] = plain_content(
+                article_json["content"], content_digests, node_indexes)
             if use_readability:
-                article_json["plain_text"] = extract_text_blocks_js(article_json["plain_content"])
+                article_json["plain_text"] = input_json["textContent"]
             else:
-                article_json["plain_text"] = extract_text_blocks_as_plain_text(article_json["plain_content"])
+                article_json["plain_text"] = extract_text_blocks_as_plain_text(
+                    article_json["plain_content"])
 
     return article_json
 
@@ -114,7 +117,8 @@ def extract_text_blocks_as_plain_text(paragraph_html):
     list_elements = soup.find_all(['ul', 'ol'])
     # Prefix text in all list items with "* " and make lists paragraphs
     for list_element in list_elements:
-        plain_items = "".join(list(filter(None, [plain_text_leaf_node(li)["text"] for li in list_element.find_all('li')])))
+        plain_items = "".join(list(filter(None, [plain_text_leaf_node(
+            li)["text"] for li in list_element.find_all('li')])))
         list_element.string = plain_items
         list_element.name = "p"
     # Select all text blocks
@@ -184,7 +188,8 @@ def plain_element(element, content_digests, node_indexes):
             element = type(element)(plain_text)
     else:
         # If not a leaf node or leaf type call recursively on child nodes, replacing
-        element.contents = plain_elements(element.contents, content_digests, node_indexes)
+        element.contents = plain_elements(
+            element.contents, content_digests, node_indexes)
     return element
 
 
